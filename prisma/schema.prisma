@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -8,16 +9,26 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
+  id           String        @id
   workoutPlans WorkoutPlan[]
 
+  name          String
+  email         String
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  sessions      Session[]
+  accounts      Account[]
+
   @@map("users")
+  @@unique([email])
 }
 
 model WorkoutPlan {
   id          String       @id @default(uuid())
   name        String
-  userId      String @map("user_id")
+  userId      String       @map("user_id")
   user        User         @relation(fields: [userId], references: [id])
   workoutDays WorkoutDay[]
   isActive    Boolean      @default(true) @map("is_active")
@@ -40,10 +51,10 @@ enum WeekDay {
 model WorkoutDay {
   id            String            @id @default(uuid())
   name          String
-  workoutPlanId String @map("workout_plan_id")
+  workoutPlanId String            @map("workout_plan_id")
   workoutPlan   WorkoutPlan       @relation(fields: [workoutPlanId], references: [id])
   isRest        Boolean           @default(false) @map("is_rest")
-  weekDay       WeekDay @map("week_day")
+  weekDay       WeekDay           @map("week_day")
   exercises     WorkoutExercise[]
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
@@ -55,13 +66,61 @@ model WorkoutExercise {
   id                String     @id @default(uuid())
   name              String
   order             Int
-  workoutDayId      String @map("workout_day_id")
+  workoutDayId      String     @map("workout_day_id")
   workoutDay        WorkoutDay @relation(fields: [workoutDayId], references: [id])
   sets              Int
   reps              Int
-  restTimeInSeconds Int @map("rest_time_in_seconds")
+  restTimeInSeconds Int        @map("rest_time_in_seconds")
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
   @@map("workout_exercises")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at")
+  token     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String? @map("ip_address")
+  userAgent String? @map("user_agent")
+  userId    String @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String @map("account_id")
+  providerId            String @map("provider_id")
+  userId                String @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String? @map("access_token")
+  refreshToken          String? @map("refresh_token")
+  idToken               String? @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
 }
