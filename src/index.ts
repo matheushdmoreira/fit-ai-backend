@@ -9,7 +9,6 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import z from 'zod'
 import { auth } from './lib/auth.js'
 
 const app = Fastify({
@@ -36,13 +35,38 @@ await app.register(fastifySwagger, {
   transform: jsonSchemaTransform,
 })
 
-await app.register(ScalarApiReference, {
-  routePrefix: '/docs',
-})
-
 app.register(fastifyCors, {
   origin: ['http://localhost:3000'],
   credentials: true,
+})
+
+await app.register(ScalarApiReference, {
+  routePrefix: '/docs',
+  configuration: {
+    sources: [
+      {
+        title: 'Fit AI API',
+        slug: 'fit-ai-api',
+        url: '/swagger.json',
+      },
+      {
+        title: 'Auth API',
+        slug: 'auth-api',
+        url: '/api/auth/open-api/generate-schema',
+      },
+    ],
+  },
+})
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: 'GET',
+  url: '/swagger.json',
+  schema: {
+    hide: true,
+  },
+  handler: (_, res) => {
+    res.send(app.swagger())
+  },
 })
 
 app.route({
@@ -78,23 +102,6 @@ app.route({
         code: 'AUTH_FAILURE',
       })
     }
-  },
-})
-
-app.withTypeProvider<ZodTypeProvider>().route({
-  method: 'GET',
-  url: '/',
-  schema: {
-    description: 'Get the root endpoint',
-    tags: ['root'],
-    response: {
-      200: z.object({
-        message: z.string(),
-      }),
-    },
-  },
-  handler: (_, res) => {
-    res.send({ message: `Hello World` })
   },
 })
 
