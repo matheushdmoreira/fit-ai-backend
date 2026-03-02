@@ -1,6 +1,9 @@
 import 'dotenv/config'
+import fastifySwagger from '@fastify/swagger'
+import ScalarApiReference from '@scalar/fastify-api-reference'
 import Fastify from 'fastify'
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -14,10 +17,33 @@ const app = Fastify({
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
+await app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: 'Fit AI API',
+      description: 'API for the Fit AI application',
+      version: '1.0.0',
+    },
+    servers: [
+      {
+        description: 'Localhost',
+        url: 'http://localhost:3333',
+      },
+    ],
+  },
+  transform: jsonSchemaTransform,
+})
+
+await app.register(ScalarApiReference, {
+  routePrefix: '/docs',
+})
+
 app.withTypeProvider<ZodTypeProvider>().route({
   method: 'GET',
   url: '/',
   schema: {
+    description: 'Get the root endpoint',
+    tags: ['root'],
     response: {
       200: z.object({
         message: z.string(),
