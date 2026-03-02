@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: fit-ai-api-postgres
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: fit-ai-api
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
