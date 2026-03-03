@@ -12,10 +12,13 @@ import { auth } from '../lib/auth.js'
 import {
   ErrorSchema,
   StartWorkoutSessionSchema,
+  UpdateWorkoutSessionBodySchema,
+  UpdateWorkoutSessionSchema,
   WorkoutPlanSchema,
 } from '../schemas/index.js'
 import { CreateWorkoutPlanUseCase } from '../use-cases/CreateWorkoutPlanUseCase.js'
 import { StartWorkoutSessionUseCase } from '../use-cases/StartWorkoutSessionUseCase.js'
+import { UpdateWorkoutSessionUseCase } from '../use-cases/UpdateWorkoutSessionUseCase.js'
 
 export const workoutPlanRoutes = async (app: FastifyInstance) => {
   app.withTypeProvider<ZodTypeProvider>().route({
@@ -144,62 +147,63 @@ export const workoutPlanRoutes = async (app: FastifyInstance) => {
     },
   })
 
-  // app.withTypeProvider<ZodTypeProvider>().route({
-  //   method: "PATCH",
-  //   url: "/:workoutPlanId/days/:workoutDayId/sessions/:sessionId",
-  //   schema: {
-  //     tags: ["Workout Plan"],
-  //     summary: "Update a workout session",
-  //     params: z.object({
-  //       workoutPlanId: z.uuid(),
-  //       workoutDayId: z.uuid(),
-  //       sessionId: z.uuid(),
-  //     }),
-  //     body: UpdateWorkoutSessionBodySchema,
-  //     response: {
-  //       200: UpdateWorkoutSessionSchema,
-  //       401: ErrorSchema,
-  //       404: ErrorSchema,
-  //       500: ErrorSchema,
-  //     },
-  //   },
-  //   handler: async (request, reply) => {
-  //     try {
-  //       const session = await auth.api.getSession({
-  //         headers: fromNodeHeaders(request.headers),
-  //       });
-  //       if (!session) {
-  //         return reply.status(401).send({
-  //           error: "Unauthorized",
-  //           code: "UNAUTHORIZED",
-  //         });
-  //       }
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: 'PATCH',
+    url: '/:workoutPlanId/days/:workoutDayId/sessions/:sessionId',
+    schema: {
+      tags: ['Workout Plan'],
+      summary: 'Update a workout session',
+      params: z.object({
+        workoutPlanId: z.uuid(),
+        workoutDayId: z.uuid(),
+        sessionId: z.uuid(),
+      }),
+      body: UpdateWorkoutSessionBodySchema,
+      response: {
+        200: UpdateWorkoutSessionSchema,
+        401: ErrorSchema,
+        404: ErrorSchema,
+        500: ErrorSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        const session = await auth.api.getSession({
+          headers: fromNodeHeaders(request.headers),
+        })
 
-  //       const updateWorkoutSession = new UpdateWorkoutSession();
-  //       const result = await updateWorkoutSession.execute({
-  //         userId: session.user.id,
-  //         workoutPlanId: request.params.workoutPlanId,
-  //         workoutDayId: request.params.workoutDayId,
-  //         sessionId: request.params.sessionId,
-  //         completedAt: request.body.completedAt,
-  //       });
+        if (!session) {
+          return reply.status(401).send({
+            error: 'Unauthorized',
+            code: 'UNAUTHORIZED',
+          })
+        }
 
-  //       return reply.status(200).send(result);
-  //     } catch (error) {
-  //       app.log.error(error);
+        const updateWorkoutSession = new UpdateWorkoutSessionUseCase()
+        const result = await updateWorkoutSession.execute({
+          userId: session.user.id,
+          workoutPlanId: request.params.workoutPlanId,
+          workoutDayId: request.params.workoutDayId,
+          sessionId: request.params.sessionId,
+          completedAt: request.body.completedAt,
+        })
 
-  //       if (error instanceof NotFoundError) {
-  //         return reply.status(404).send({
-  //           error: error.message,
-  //           code: "NOT_FOUND_ERROR",
-  //         });
-  //       }
+        return reply.status(200).send(result)
+      } catch (error) {
+        app.log.error(error)
 
-  //       return reply.status(500).send({
-  //         error: "Internal server error",
-  //         code: "INTERNAL_SERVER_ERROR",
-  //       });
-  //     }
-  //   },
-  // });
+        if (error instanceof NotFoundError) {
+          return reply.status(404).send({
+            error: error.message,
+            code: 'NOT_FOUND_ERROR',
+          })
+        }
+
+        return reply.status(500).send({
+          error: 'Internal server error',
+          code: 'INTERNAL_SERVER_ERROR',
+        })
+      }
+    },
+  })
 }
