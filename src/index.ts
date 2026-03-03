@@ -1,4 +1,5 @@
 import 'dotenv/config'
+
 import fastifyCors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
 import ScalarApiReference from '@scalar/fastify-api-reference'
@@ -9,10 +10,13 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
+
 import { auth } from './lib/auth.js'
 
+import { workoutPlanRoutes } from './routes/workout-plan.js'
+
 const app = Fastify({
-  // logger: true,
+  logger: true,
 })
 
 app.setValidatorCompiler(validatorCompiler)
@@ -57,6 +61,8 @@ await app.register(ScalarApiReference, {
     ],
   },
 })
+
+await app.register(workoutPlanRoutes, { prefix: '/workout-plans' })
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: 'GET',
