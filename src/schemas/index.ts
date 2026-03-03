@@ -43,6 +43,20 @@ export const GetHomeDataSchema = z.object({
   ),
 })
 
+export const GetStatsSchema = z.object({
+  workoutStreak: z.number(),
+  consistencyByDay: z.record(
+    z.string(),
+    z.object({
+      workoutDayCompleted: z.boolean(),
+      workoutDayStarted: z.boolean(),
+    }),
+  ),
+  completedWorkoutsCount: z.number(),
+  conclusionRate: z.number(),
+  totalTimeInSeconds: z.number(),
+})
+
 export const GetWorkoutPlanSchema = z.object({
   id: z.uuid(),
   name: z.string(),
