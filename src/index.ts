@@ -13,6 +13,7 @@ import {
 
 import { auth } from './lib/auth.js'
 
+import { homeRoutes } from './routes/home.js'
 import { workoutPlanRoutes } from './routes/workout-plan.js'
 
 const app = Fastify({
@@ -62,6 +63,7 @@ await app.register(ScalarApiReference, {
   },
 })
 
+await app.register(homeRoutes, { prefix: '/home' })
 await app.register(workoutPlanRoutes, { prefix: '/workout-plans' })
 
 app.withTypeProvider<ZodTypeProvider>().route({
