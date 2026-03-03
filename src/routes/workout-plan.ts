@@ -13,6 +13,7 @@ import {
   ErrorSchema,
   GetWorkoutDaySchema,
   GetWorkoutPlanSchema,
+  ListWorkoutPlansSchema,
   StartWorkoutSessionSchema,
   UpdateWorkoutSessionBodySchema,
   UpdateWorkoutSessionSchema,
@@ -21,6 +22,7 @@ import {
 import { CreateWorkoutPlanUseCase } from '../use-cases/CreateWorkoutPlanUseCase.js'
 import { GetWorkoutDayUseCase } from '../use-cases/GetWorkoutDayUseCase.js'
 import { GetWorkoutPlanUseCase } from '../use-cases/GetWorkoutPlanUseCase.js'
+import { ListWorkoutPlansUseCase } from '../use-cases/ListWorkoutPlansUseCase.js'
 import { StartWorkoutSessionUseCase } from '../use-cases/StartWorkoutSessionUseCase.js'
 import { UpdateWorkoutSessionUseCase } from '../use-cases/UpdateWorkoutSessionUseCase.js'
 
@@ -70,6 +72,55 @@ export const workoutPlanRoutes = async (app: FastifyInstance) => {
             code: 'NOT_FOUND_ERROR',
           })
         }
+
+        return reply.status(500).send({
+          error: 'Internal server error',
+          code: 'INTERNAL_SERVER_ERROR',
+        })
+      }
+    },
+  })
+
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['Workout Plan'],
+      summary: 'List workout plans',
+      querystring: z.object({
+        active: z
+          .enum(['true', 'false'])
+          .transform((val) => val === 'true')
+          .optional(),
+      }),
+      response: {
+        200: ListWorkoutPlansSchema,
+        401: ErrorSchema,
+        500: ErrorSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        const session = await auth.api.getSession({
+          headers: fromNodeHeaders(request.headers),
+        })
+
+        if (!session) {
+          return reply.status(401).send({
+            error: 'Unauthorized',
+            code: 'UNAUTHORIZED',
+          })
+        }
+
+        const listWorkoutPlans = new ListWorkoutPlansUseCase()
+        const result = await listWorkoutPlans.execute({
+          userId: session.user.id,
+          active: request.query.active,
+        })
+
+        return reply.status(200).send(result)
+      } catch (error) {
+        app.log.error(error)
 
         return reply.status(500).send({
           error: 'Internal server error',
