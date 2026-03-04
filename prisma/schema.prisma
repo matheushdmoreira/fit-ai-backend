@@ -8,17 +8,22 @@ datasource db {
 }
 
 model User {
-  id           String        @id
-  workoutPlans WorkoutPlan[]
+  id                  String  @id
+  name                String
+  email               String
+  emailVerified       Boolean @default(false) @map("email_verified")
+  image               String?
+  weightInGrams       Int?    @map("weight_in_grams")
+  heightInCentimeters Int?    @map("height_in_centimeters")
+  age                 Int?
+  bodyFatPercentage   Int?    @map("body_fat_percentage")
 
-  name          String
-  email         String
-  emailVerified Boolean   @default(false) @map("email_verified")
-  image         String?
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
-  sessions      Session[]
-  accounts      Account[]
+  workoutPlans WorkoutPlan[]
+  sessions     Session[]
+  accounts     Account[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@unique([email])
   @@map("users")
@@ -27,10 +32,10 @@ model User {
 model WorkoutPlan {
   id          String       @id @default(uuid())
   name        String
+  isActive    Boolean      @default(true) @map("is_active")
   userId      String       @map("user_id")
   user        User         @relation(fields: [userId], references: [id])
   workoutDays WorkoutDay[]
-  isActive    Boolean      @default(true) @map("is_active")
   createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz()
 
