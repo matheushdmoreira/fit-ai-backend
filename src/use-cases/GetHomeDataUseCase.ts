@@ -14,7 +14,7 @@ interface InputDto {
 
 interface OutputDto {
   activeWorkoutPlanId: string
-  todayWorkoutDay: {
+  todayWorkoutDay?: {
     workoutPlanId: string
     id: string
     name: string
@@ -71,10 +71,6 @@ export class GetHomeDataUseCase {
       (day) => day.weekDay === todayWeekDay,
     )
 
-    if (!todayWorkoutDay) {
-      throw new NotFoundError('No workout day found for the given date')
-    }
-
     const weekStart = currentDate.startOf('week')
     const weekEnd = currentDate.endOf('week').subtract(1, 'day')
 
@@ -92,16 +88,19 @@ export class GetHomeDataUseCase {
 
     return {
       activeWorkoutPlanId: workoutPlan.id,
-      todayWorkoutDay: {
-        workoutPlanId: workoutPlan.id,
-        id: todayWorkoutDay.id,
-        name: todayWorkoutDay.name,
-        isRest: todayWorkoutDay.isRest,
-        weekDay: todayWorkoutDay.weekDay,
-        estimatedDurationInSeconds: todayWorkoutDay.estimatedDurationInSeconds,
-        coverImageUrl: todayWorkoutDay.coverImageUrl ?? undefined,
-        exercisesCount: todayWorkoutDay.exercises.length,
-      },
+      todayWorkoutDay: todayWorkoutDay
+        ? {
+            workoutPlanId: workoutPlan.id,
+            id: todayWorkoutDay.id,
+            name: todayWorkoutDay.name,
+            isRest: todayWorkoutDay.isRest,
+            weekDay: todayWorkoutDay.weekDay,
+            estimatedDurationInSeconds:
+              todayWorkoutDay.estimatedDurationInSeconds,
+            coverImageUrl: todayWorkoutDay.coverImageUrl ?? undefined,
+            exercisesCount: todayWorkoutDay.exercises.length,
+          }
+        : undefined,
       workoutStreak,
       consistencyByDay,
     }
