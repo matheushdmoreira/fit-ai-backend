@@ -22,7 +22,7 @@ export const UpdateWorkoutSessionSchema = z.object({
 })
 
 export const GetHomeDataSchema = z.object({
-  activeWorkoutPlanId: z.uuid(),
+  activeWorkoutPlanId: z.uuid().optional(),
   todayWorkoutDay: z
     .object({
       workoutPlanId: z.uuid(),
