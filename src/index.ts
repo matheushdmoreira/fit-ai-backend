@@ -12,7 +12,7 @@ import {
 } from 'fastify-type-provider-zod'
 
 import { auth } from './lib/auth.js'
-
+import { env } from './lib/env.js'
 import { aiRoutes } from './routes/ai.js'
 import { homeRoutes } from './routes/home.js'
 import { meRoutes } from './routes/me.js'
@@ -36,7 +36,7 @@ await app.register(fastifySwagger, {
     servers: [
       {
         description: 'Localhost',
-        url: 'http://localhost:3333',
+        url: env.API_BASE_URL,
       },
     ],
   },
@@ -44,7 +44,7 @@ await app.register(fastifySwagger, {
 })
 
 app.register(fastifyCors, {
-  origin: ['http://localhost:3000'],
+  origin: [env.WEB_APP_BASE_URL],
   credentials: true,
 })
 
@@ -123,12 +123,10 @@ app.route({
 })
 
 try {
-  await app
-    .listen({ port: Number(process.env.PORT) ?? 3333, host: '0.0.0.0' })
-    .then(() => {
-      console.log('🔥 HTTP server running on http://localhost:3333')
-      console.log('📚 Docs available at http://localhost:3333/docs')
-    })
+  await app.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
+    console.log('🔥 HTTP server running on http://localhost:3333')
+    console.log('📚 Docs available at http://localhost:3333/docs')
+  })
 } catch (err) {
   app.log.error(err)
   process.exit(1)
