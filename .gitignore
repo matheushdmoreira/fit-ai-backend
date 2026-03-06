@@ -6,3 +6,6 @@ postgres_data
 CURSOR.md
 tasks
 docs
+
+# Build
+dist
