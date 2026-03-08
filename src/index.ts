@@ -35,6 +35,7 @@ const envToLogger = {
 
 const app = Fastify({
   logger: envToLogger[env.NODE_ENV],
+  trustProxy: true,
 })
 
 app.setValidatorCompiler(validatorCompiler)
@@ -105,8 +106,25 @@ app.route({
   },
   async handler(request, reply) {
     try {
-      // Construct request URL
-      const url = new URL(request.url, `http://${request.headers.host}`)
+      const forwardedProto = request.headers['x-forwarded-proto']
+      const forwardedHost = request.headers['x-forwarded-host']
+      const protocol =
+        (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)
+          ?.split(',')[0]
+          ?.trim() ||
+        request.protocol ||
+        'http'
+      const host =
+        (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)
+          ?.split(',')[0]
+          ?.trim() || request.headers.host
+
+      if (!host) {
+        throw new Error('Missing host header in auth request')
+      }
+
+      // Rebuild the public URL so Better Auth can infer secure cookies correctly behind proxies.
+      const url = new URL(request.url, `${protocol}://${host}`)
 
       // Convert Fastify headers to standard Headers object
       const headers = new Headers()
@@ -123,7 +141,20 @@ app.route({
       const response = await auth.handler(req)
       // Forward response to client
       reply.status(response.status)
-      response.headers.forEach((value, key) => reply.header(key, value))
+
+      const setCookies = response.headers.getSetCookie()
+      if (setCookies.length > 0) {
+        reply.header('set-cookie', setCookies)
+      }
+
+      response.headers.forEach((value, key) => {
+        if (key.toLowerCase() === 'set-cookie') {
+          return
+        }
+
+        reply.header(key, value)
+      })
+
       reply.send(response.body ? await response.text() : null)
     } catch (error) {
       app.log.error(error)
