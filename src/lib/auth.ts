@@ -19,11 +19,10 @@ export const auth = betterAuth({
   }),
   plugins: [openAPI()],
   advanced: {
-    crossSubDomainCookies: env.AUTH_COOKIE_DOMAIN
-      ? {
-          enabled: true,
-          domains: env.AUTH_COOKIE_DOMAIN,
-        }
-      : undefined,
+    crossSubDomainCookies: {
+      enabled: true,
+      domains:
+        env.NODE_ENV === 'production' ? env.AUTH_COOKIE_DOMAIN : undefined,
+    },
   },
 })
