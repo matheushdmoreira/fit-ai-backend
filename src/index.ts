@@ -169,8 +169,12 @@ app.route({
 
 try {
   await app.listen({ port: env.PORT, host: '0.0.0.0' }).then(() => {
-    console.log('🔥 HTTP server running on http://localhost:3333')
-    console.log('📚 Docs available at http://localhost:3333/docs')
+    if (env.NODE_ENV !== 'production') {
+      console.log('🔥 HTTP server running on http://localhost:3333')
+      console.log('📚 Docs available at http://localhost:3333/docs')
+    } else {
+      console.log('🔥 HTTP server running!')
+    }
   })
 } catch (err) {
   app.log.error(err)

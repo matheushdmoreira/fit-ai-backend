@@ -13,7 +13,7 @@ COPY prisma ./prisma/
 # ---- Dependencies ----
 FROM base AS deps
 
-RUN pnpm install -frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # ---- Build ----
 FROM deps AS build
